@@ -120,32 +120,63 @@ global_enable <= forge_ready AND user_enable AND clk_enable AND loader_done;
 
 ---
 
-## 📦 What's in the Box?
+## 🧩 Modular Architecture
 
-### Core Foundation
+### How the Pieces Fit Together
 
-| Component | What It Does | Why You Need It |
-|-----------|--------------|-----------------|
-| **`libs/platform/`** | FORGE entities (MCC interface + wrapper template) | **Required** - Your instruments start here |
-| **`libs/moku-models/`** | Moku platform specs (Go/Lab/Pro/Delta) | **Required** - Hardware definitions |
-| **`examples/basic-probe-driver/`** | Complete FORGE reference implementation | **Study this** - Production example |
+Like Voltron, this monorepo combines independent submodules into a unified development platform. Each submodule is an "island of authority" - independently versioned, yet working in harmony:
 
-### VHDL Development Tools
+```mermaid
+graph LR
+    A[forge-vhdl] -->|VHDL Components| D[Your Instrument]
+    B[moku-models] -->|Platform Specs| D
+    C[riscure-models] -->|Probe Safety| D
+    E[forge-codegen] -->|YAML→VHDL| D
+    D -->|Deploys to| F[Moku Hardware]
+```
 
-| Component | What It Does | When You Need It |
-|-----------|--------------|------------------|
-| **`tools/forge-codegen/`** | YAML → VHDL code generator | Generating register maps |
-| **`libs/forge-vhdl/`** | Reusable VHDL components | Clock dividers, voltage utils, FSM observer |
-| **`libs/riscure-models/`** | Example probe specifications | Building probe integration |
+### Core Submodules
 
-### AI Development Assistance
+#### 🔧 **[forge-vhdl](https://github.com/sealablab/forge-vhdl-3v4o)**
+Reusable VHDL components and testing framework
+- Serialization packages (voltage, time, types)
+- Utility components (clock dividers, encoders)
+- CocoTB progressive testing infrastructure
+- *Think of it as:* Your VHDL standard library
 
-| Component | What It Does |
-|-----------|--------------|
-| **`.claude/agents/cocotb-integration-test/`** | Automated CocoTB test generation (tested) |
-| **`.claude/commands/customize-monorepo`** | Interactive template customization |
+#### 📊 **[moku-models](https://github.com/sealablab/moku-models-3v4o)**
+Platform specifications for all Moku devices
+- Hardware capabilities (Go/Lab/Pro/Delta)
+- Signal routing definitions
+- Pydantic models for type-safe configuration
+- *Think of it as:* Your hardware abstraction layer
 
-**Note:** Only `cocotb-integration-test` agent has been tested. Other agents may need work.
+#### ⚡ **[riscure-models](https://github.com/sealablab/riscure-models-3v4o)**
+Probe specifications and voltage safety validation
+- Electrical characteristics of FI/SCA probes
+- Voltage compatibility checking
+- Example: DS1120A EMFI probe model
+- *Think of it as:* Your probe safety layer
+
+#### 🏗️ **[forge-codegen](https://github.com/sealablab/forge-codegen-3v4o)** *(dormant)*
+YAML to VHDL code generation
+- 23-type serialization system
+- Register mapping generation
+- Currently manual VHDL preferred
+- *Think of it as:* Your future automation layer
+
+### Local Resources
+
+#### 📚 **libs/platform/**
+FORGE foundational entities (not a submodule - core to this repo)
+- `MCC_CustomInstrument.vhd` - Vendor interface
+- `FORGE_App_Wrapper.vhd` - Your starting template
+
+#### 🎓 **examples/basic-probe-driver/**
+Complete production reference implementation
+- Demonstrates all FORGE patterns
+- Includes progressive CocoTB tests
+- Your learning blueprint
 
 ---
 

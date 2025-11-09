@@ -26,26 +26,40 @@ Implement and execute CocoTB tests for forge-vhdl components (utilities, package
 ```bash
 # Receive test design from designer agent
 # Implement: Constants, P1 tests, orchestrator, test_configs.py entry
-# Execute from monorepo root: uv run python libs/forge-vhdl/cocotb_test/run.py <component>
+# Execute from repo root: uv run python cocotb_tests/run.py <component>
 # Debug: Fix failures, iterate until all green
-# Commit: After each fix/milestone (incremental commits, echo to files)
+# Commit: After each fix/milestone (incremental commits)
 ```
 
 ## Critical Constraints
 
 **Python Environment:**
-- ALWAYS use top-level `uv` workspace (from monorepo root)
-- Never cd into submodules or use local python interpreters
+- Use `uv` for Python package management
+- Virtual environment managed in `.venv/`
+- All dependencies specified in `pyproject.toml`
+
+**CRITICAL - First-Time Setup:**
+```bash
+# ALWAYS use the setup script for initial setup
+./scripts/setup.sh
+
+# DO NOT run 'uv sync' alone - it won't install workspace members!
+```
+
+**Why?** The workspace contains 3 Python packages (forge_cocotb, forge_platform, forge_tools)
+that must be installed in editable mode. The setup script does this automatically.
+Running `uv sync` alone will install dependencies but NOT the workspace packages,
+causing `ModuleNotFoundError: No module named 'forge_cocotb'`.
 
 **Git Strategy:**
 - Commit after each test implementation, bug fix, or milestone
-- Write commit messages to files, display to user (token-efficient)
-- User likes watching git log for progress
+- Use descriptive commit messages
+- Follow conventional commits format
 
 **Execution Pattern:**
 ```bash
-# From monorepo root only!
-uv run python libs/forge-vhdl/cocotb_test/run.py <component>
+# From repo root
+uv run python cocotb_tests/run.py <component>
 ```
 
 ## Key Responsibilities
@@ -87,5 +101,5 @@ await reset_active_high(dut)  # or reset_active_low(dut)
 ## See Also
 
 - `agent.md` - Full agent specification
-- `libs/forge-vhdl/CLAUDE.md` - Testing standards
-- `libs/forge-vhdl/docs/COCOTB_TROUBLESHOOTING.md` - Debugging guide
+- `CLAUDE.md` - Testing standards
+- `docs/COCOTB_TROUBLESHOOTING.md` - Debugging guide

@@ -1,0 +1,116 @@
+Hi Claude! I'm testing the forge-vhdl-3v1-claude repository's cloud-first VHDL development experience.
+
+This repo promises "Full VHDL simulation in your browser" with one-command setup. Let's validate the complete developer journey:
+
+---
+
+## Phase 1: First Impressions
+
+Read these files and rate the clarity (1-10):
+1. README.md - Does it convey "cloud-first" immediately?
+2. QUICKSTART_CLOUD.md - Are steps clear for beginners?
+3. llms.txt - Is cloud setup easy to find?
+
+What works well? What's confusing?
+
+---
+
+## Phase 2: One-Command Setup
+
+Run: `uv run python scripts/cloud_setup_with_ghdl.py`
+
+Report:
+- Did it work without errors?
+- What was installed?
+- How long did it take?
+- Any warnings?
+
+Expected: ~2-3 minutes, auto-installs GHDL
+
+---
+
+## Phase 3: Test Execution
+
+```bash
+# List tests
+uv run python cocotb_tests/run.py --list
+
+# Run tests
+uv run python cocotb_tests/run.py forge_util_clk_divider
+uv run python cocotb_tests/run.py forge_lut_pkg
+```
+
+Report:
+- How many tests available?
+- Did tests pass?
+- Output lines per test (<20 expected)?
+- Did GHDL actually simulate?
+
+---
+
+## Phase 4: AI Workflow
+
+```bash
+# Check agents exist
+ls .claude/agents/
+cat .claude/agents/README.md
+```
+
+Then try: `/gather-requirements`
+
+Report: Are AI agents accessible and clear?
+
+---
+
+## Phase 5: Code Exploration
+
+```bash
+# Explore VHDL
+find vhdl/components -name "*.vhd" | head -5
+cat vhdl/components/utilities/forge_util_clk_divider.vhd
+
+# Explore tests
+ls cocotb_tests/components/forge_util_clk_divider_tests/
+```
+
+Report: Is code structure clear? Could you add a component?
+
+---
+
+## Phase 6: Progressive Testing
+
+```bash
+# P1 (fast, <20 lines)
+uv run python cocotb_tests/run.py forge_util_clk_divider
+
+# P2 (comprehensive)
+TEST_LEVEL=P2_INTERMEDIATE uv run python cocotb_tests/run.py forge_util_clk_divider
+```
+
+Report: Output difference? Concept clear?
+
+---
+
+## Phase 7: Example Walkthrough
+
+```bash
+cd examples/counter
+cat README.md
+ls vhdl/ cocotb_tests/
+```
+
+Report: Does example demonstrate patterns clearly?
+
+---
+
+## Final Summary
+
+Provide:
+- ✅ What worked perfectly
+- ⚠️ What could be improved
+- ❌ What failed or blocked progress
+- 💡 Recommendations
+- 🎯 Overall rating (1-10)
+- Would you recommend this to someone learning VHDL?
+
+Thanks!

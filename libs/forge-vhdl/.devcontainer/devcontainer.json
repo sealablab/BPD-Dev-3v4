@@ -1,0 +1,47 @@
+{
+  "name": "VHDL-FORGE 3.0",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "puorc.awesome-vhdl",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "files.associations": {
+          "*.vhd": "vhdl",
+          "*.vhdl": "vhdl"
+        },
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      }
+    }
+  },
+
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:${containerEnv:HOME}/.cargo/bin"
+  },
+
+  "forwardPorts": [],
+
+  "onCreateCommand": "echo 'VHDL-FORGE 3.0 Container Created'",
+
+  "postAttachCommand": "echo '✅ VHDL-FORGE 3.0 Ready! Run: uv run python cocotb_tests/run.py --list'"
+}

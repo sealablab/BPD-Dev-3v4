@@ -4,17 +4,20 @@
 
 ## What is this?
 
-**Template repository** for building custom FPGA instruments on Moku platforms (Go/Lab/Pro/Delta) with integrated probe support. Uses composable git submodules for: type system → code generation → VHDL implementation → hardware deployment.
+**Platform-aware FPGA development monorepo** for Moku instruments (Go/Lab/Pro/Delta) with probe integration.
 
-**Primary use case:** Adding YOUR custom probe models (laser, RF, etc.) to Moku platform
+**🔴 MANDATORY FIRST READ:** [libs/moku-models/llms.txt](libs/moku-models/llms.txt) - Platform specifications ARE CRITICAL!
+- Clock frequencies, DAC/ADC ranges, slot counts differ per platform
+- Your VHDL must respect platform constraints
+- Digital → Voltage mapping is platform-specific
 
-**Reference implementation:** Moku + Riscure DS1120A EMFI probe
+**Architecture Binding:** [libs/platform/](libs/platform/) contains authoritative templates:
+- `MCC_CustomInstrument.vhd` - Vendor interface (DO NOT MODIFY)
+- `FORGE_App_Wrapper.vhd` - 3-layer template (CUSTOMIZE)
 
-**Key insight:** Tiered documentation with submodule delegation enables focused context loading.
+**CRITICAL:** All instruments implement **FORGE Control Scheme (CR0[31:29])** - 3-bit handshaking for safe initialization.
 
-**Architecture:** v2.0.0 - Clean separation between tools and foundational libraries (flat structure)
-
-**CRITICAL:** All Moku instruments must implement **FORGE Control Scheme (CR0[31:29])** - 3-bit calling convention for safe initialization. See CLAUDE.md for complete specification.
+**Digital Scaling:** Components output digital codes, platforms map to voltages. See forge-vhdl for philosophy.
 
 ## Repository Structure
 
@@ -33,19 +36,29 @@
 
 **For Details:** See [CLAUDE.md](CLAUDE.md) - "MCC CustomInstrument Interface" section
 
-### Core Platform (git submodules)
+### Core Platform Models (REVIEW THESE FIRST!)
 
 | Component | Purpose | Quick Ref |
 |-----------|---------|-----------|
-| [moku-models](libs/moku-models/) | **REQUIRED** - Moku platform specifications (Go/Lab/Pro/Delta) | [llms.txt](libs/moku-models/llms.txt) |
-| [riscure-models](libs/riscure-models/) | Example probe specs (DS1120A EMFI) - Use as template | [llms.txt](libs/riscure-models/llms.txt) |
+| [moku-models](libs/moku-models/) | **🔴 REQUIRED** - Platform specs (clocks, DAC ranges, slots) | [llms.txt](libs/moku-models/llms.txt) |
+| [riscure-models](libs/riscure-models/) | Probe voltage safety specs (DS1120A EMFI reference) | [llms.txt](libs/riscure-models/llms.txt) |
+
+**Why platform models matter:**
+- Moku Go: 125 MHz clock, ±5V DAC, 2 slots
+- Moku Lab/Pro: 200 MHz clock, different constraints
+- **Your code MUST adapt to platform differences!**
 
 ### VHDL Development Tools (git submodules)
 
 | Component | Purpose | Quick Ref |
 |-----------|---------|-----------|
 | [forge-codegen](tools/forge-codegen/) | YAML → VHDL code generator (23-type system) | [llms.txt](tools/forge-codegen/llms.txt) |
-| [forge-vhdl](libs/forge-vhdl/) | Reusable VHDL components + voltage utilities | [llms.txt](libs/forge-vhdl/llms.txt) |
+| [forge-vhdl](libs/forge-vhdl/) | **Platform-agnostic** components (digital domain) | [llms.txt](libs/forge-vhdl/llms.txt) |
+
+**Digital Scaling Philosophy (forge-vhdl):**
+- Components output digital codes (signed 16-bit)
+- Platform maps digital → voltage (DAC configuration)
+- Voltage packages are conversion utilities ONLY
 
 **Internal to forge-codegen:**
 - `basic_serialized_datatypes/` - 23-type system (voltage/time/boolean) with automatic register packing

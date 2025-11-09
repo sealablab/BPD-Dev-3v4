@@ -47,5 +47,5 @@ When design complete, hand off to **cocotb-progressive-test-runner** with:
 ## See Also
 
 - `agent.md` - Full agent specification
-- `libs/forge-vhdl/CLAUDE.md` - Testing standards
-- `libs/forge-vhdl/docs/COCOTB_TROUBLESHOOTING.md` - Type constraints
+- `CLAUDE.md` - Testing standards
+- `docs/COCOTB_TROUBLESHOOTING.md` - Type constraints

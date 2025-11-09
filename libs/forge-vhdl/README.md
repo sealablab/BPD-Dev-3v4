@@ -1,170 +1,222 @@
-# moku-instrument-forge-vhdl
+# 🚀 forge-vhdl: Multi-Tenant AI-Powered VHDL Development
 
-Shared VHDL utilities for Moku custom instrument development using the forge framework.
+**Build tested VHDL components in minutes with your choice of AI assistant**
 
-## Overview
-
-This library provides reusable VHDL components for building custom instruments on the Moku platform:
-
-- **Packages** - Common data types, constants, and utilities (including voltage domain packages)
-- **Debugging** - FSM observer for hardware debugging
-- **Loader** - BRAM initialization utilities
-- **Utilities** - Clock dividers, triggers, and other helpers
-
-### Documentation
-
-This project uses a **3-tier documentation system** optimized for AI agents and developers:
-- **llms.txt** - Quick reference (~500 tokens): Component catalog, testing commands
-- **CLAUDE.md** - Authoritative guide (~3.5k tokens): Complete testing standards, design patterns, coding standards
-- **Source code** - Implementation details with inline documentation
-
-See `CLAUDE.md` for comprehensive CocoTB progressive testing standards and VHDL coding guidelines.
-
-## Repository Structure
-
-```
-moku-instrument-forge-vhdl/
-├── vhdl/
-│   ├── packages/           # VHDL packages
-│   │   ├── forge_common_pkg.vhd
-│   │   ├── forge_lut_pkg.vhd
-│   │   ├── forge_voltage_3v3_pkg.vhd
-│   │   ├── forge_voltage_5v0_pkg.vhd
-│   │   └── forge_voltage_5v_bipolar_pkg.vhd
-│   ├── debugging/          # Debug utilities
-│   │   └── fsm_observer.vhd
-│   ├── loader/             # Data loading utilities
-│   │   └── forge_bram_loader.vhd
-│   └── utilities/          # Generic utilities
-│       ├── forge_util_clk_divider.vhd
-│       └── forge_voltage_threshold_trigger_core.vhd
-├── tests/                  # CocotB tests for utilities
-└── README.md
-```
-
-## Usage
-
-This library is typically used as a git submodule in projects like `moku-instrument-forge-mono-repo`:
-
-```bash
-# Add as submodule
-git submodule add https://github.com/sealablab/moku-instrument-forge-vhdl.git libs/forge-vhdl
-
-# Initialize submodule
-git submodule update --init --recursive
-```
-
-## Components
-
-### Packages
-
-**Voltage Domain Packages (forge_voltage_*):**
-- **forge_voltage_3v3_pkg** - 0-3.3V unipolar (TTL, GPIO, digital logic)
-- **forge_voltage_5v0_pkg** - 0-5.0V unipolar (sensor supply, unipolar analog)
-- **forge_voltage_5v_bipolar_pkg** - ±5.0V bipolar (Moku DAC/ADC, AC signals)
-
-**Utility Packages:**
-- **forge_common_pkg** - Common types and constants for Moku development
-- **forge_lut_pkg** - Look-up table utilities (with CocoTB tests)
-
-### Debugging
-
-**fsm_observer** - Real-time FSM state observation via output registers
-- Exports FSM state to Moku registers for oscilloscope debugging
-- Enables hardware validation without simulation
-- See `.claude/commands/debug.md` for usage patterns
-
-### Loader
-
-**forge_bram_loader** - BRAM initialization from external sources
-
-### Utilities
-
-**forge_util_clk_divider** - Programmable clock divider (with CocoTB tests)
-**forge_voltage_threshold_trigger_core** - Voltage threshold detection
-
-## Development
-
-### Requirements
-
-- GHDL (VHDL compiler)
-- CocotB (for testing)
-- Python 3.10+ with uv
-
-### Running Tests
-
-This library uses **CocoTB progressive testing** with GHDL output filtering for LLM-optimized output:
-
-```bash
-# Install dependencies
-uv sync
-
-# Run P1 tests (default, <20 lines output)
-uv run python tests/run.py forge_util_clk_divider
-
-# Run P2 tests (comprehensive validation)
-TEST_LEVEL=P2_INTERMEDIATE uv run python tests/run.py forge_util_clk_divider
-
-# List all available tests
-uv run python tests/run.py --list
-
-# Run all tests
-uv run python tests/run.py --all
-```
-
-**Key Innovation:** 98% test output reduction (287 lines → 8 lines) through progressive test levels (P1/P2/P3/P4) and intelligent GHDL filtering. See `CLAUDE.md` for complete testing standards.
-
-## Integration with Forge
-
-This library is designed to work alongside `moku-instrument-forge`:
-
-- **forge** generates probe interface code (shim + main template)
-- **forge-vhdl** provides reusable utilities for implementing custom logic
-- Together they provide a complete development environment
-
-## Version History
-
-**v2.1.0** - Complete forge-vhdl Unification (2025-11-04)
-- Complete volo→forge namespace migration (5 components renamed)
-- Intentional removal of legacy volo_voltage_pkg (fail-fast design)
-- 3-tier documentation system (llms.txt, CLAUDE.md)
-- Production-ready voltage type system (3v3, 5v0, 5v_bipolar)
-- CocoTB progressive testing with 98% output reduction
-
-**v1.0.0** - Initial release
-- Extracted from EZ-EMFI project
-- Includes forge utilities and fsm_observer
-- CocotB test infrastructure
-
-## License
-
-MIT License - See LICENSE file
-
-## Contributing
-
-This library is part of the Moku custom instrument ecosystem. When adding new utilities:
-
-1. Add VHDL source to appropriate `vhdl/` subdirectory
-2. Add CocotB tests to `tests/`
-3. Update this README
-4. Document usage patterns in `.claude/commands/`
-
-## Related Projects
-
-- [moku-instrument-forge](https://github.com/sealablab/moku-instrument-forge) - Code generation framework
-- [moku-instrument-forge-mono-repo](https://github.com/sealablab/moku-instrument-forge-mono-repo) - Example monorepo structure
-- [moku-models](https://github.com/sealablab/moku-models) - Platform data models
-
-## 🤖 AI Agent Integration
-
-This repository implements a **3-tier documentation system** optimized for token efficiency:
-
-- **Tier 1 (llms.txt)** - Quick reference (~500 tokens): Component catalog, testing commands, basic usage
-- **Tier 2 (CLAUDE.md)** - Authoritative guide (~3.5k tokens): Complete testing standards, CocoTB progressive testing, VHDL coding standards, design patterns
-- **Tier 3 (Source code)** - Implementation details: VHDL source with inline documentation, CocoTB tests
-
-**Testing Innovation:** Progressive test levels (P1/P2/P3/P4) with GHDL output filtering achieve 98% output reduction, enabling rapid LLM-assisted VHDL development.
+**Version:** 3.3.0-multi-tenant
+**Template:** https://github.com/vmars-20/forge-vhdl-3v3-vmars
 
 ---
 
-**Last Updated:** 2025-11-04
+## 🎯 Choose Your AI Assistant
+
+This multi-tenant repository supports three leading AI development environments. Each has unique strengths - choose based on your workflow preferences:
+
+### 🤖 [Claude (Original Edition)](CLAUDE.md)
+
+**Best for:** Autonomous workflows, cloud execution, minimal interaction
+
+**Pros:**
+- ✅ Full 3-agent autonomous workflow
+- ✅ Environment-aware (auto-detects local/cloud)
+- ✅ Hybrid workflow (local requirements → cloud agents)
+- ✅ Incremental git commits in sandbox branches
+- ✅ No token limits in cloud execution
+
+**Cons:**
+- ⚠️ Requires git push/pull for cloud handoff
+- ⚠️ Cloud execution may have latency
+- ⚠️ Less interactive than IDE-based tools
+
+**Quick Start:** [Read CLAUDE.md](CLAUDE.md#quick-start) for `/forge-start` command
+
+---
+
+### 💻 [GitHub Copilot Edition](COPILOT.md)
+
+**Best for:** IDE-integrated development, iterative coding, immediate feedback
+
+**Pros:**
+- ✅ Inline code suggestions while typing
+- ✅ Deep VS Code/IDE integration
+- ✅ Chat-based iterative development
+- ✅ File-focused context awareness
+- ✅ Immediate feedback on changes
+- ✅ Works great in GitHub Codespaces
+
+**Cons:**
+- ⚠️ No multi-agent orchestration
+- ⚠️ Limited to file-by-file generation
+- ⚠️ Requires manual coordination between steps
+- ⚠️ Less autonomous than agent-based tools
+
+**Quick Start:** [Read COPILOT.md](COPILOT.md#quick-start) for `@workspace` commands
+
+---
+
+### 🎨 [Cursor Edition](CURSOR.md)
+
+**Best for:** Full local execution, multi-agent orchestration, best of both worlds
+
+**Pros:**
+- ✅ Complete local multi-agent orchestration
+- ✅ No cloud handoff needed
+- ✅ Composer mode for complex workflows
+- ✅ Real-time test execution and debugging
+- ✅ IDE integration with agent capabilities
+- ✅ Incremental commits without leaving IDE
+
+**Cons:**
+- ⚠️ Cursor-specific (requires Cursor IDE)
+- ⚠️ May require more local resources
+- ⚠️ Learning curve for Composer mode
+
+**Quick Start:** [Read CURSOR.md](CURSOR.md#quick-start) for Composer (`Cmd+I`) workflows
+
+---
+
+## 📚 Documentation Architecture
+
+This repository uses a **hierarchical documentation strategy** optimized for AI token usage:
+
+- **[llms.txt](llms.txt)** - Minimal entry point (~500 tokens)
+- **[CONTEXT_MANAGEMENT.md](CONTEXT_MANAGEMENT.md)** - Token optimization strategy (IMPORTANT!)
+- **Tool-specific guides** - Detailed workflows for each AI assistant
+
+### Progressive Discovery
+
+Each directory contains a README.md explaining:
+- Where you are in the structure
+- What should be there
+- How it relates to the whole
+
+Start with `llms.txt`, then load documentation as needed following the tiered approach in `CONTEXT_MANAGEMENT.md`.
+
+---
+
+## 🔄 Common Workflows
+
+All three AI assistants support these core workflows:
+
+1. **AI-First Requirements** (2-5 minutes)
+   - Quick pattern matching
+   - 2-3 critical questions
+   - Intelligent defaults
+
+2. **Engineer Requirements** (15-30 minutes)
+   - 30-question structured interview
+   - Full specification control
+   - Detailed documentation
+
+3. **3-Agent Workflow**
+   - Agent 1: VHDL generation
+   - Agent 2: Test design
+   - Agent 3: Test implementation
+
+The implementation details vary by tool - see tool-specific guides for details.
+
+---
+
+## 🧪 Testing Standards
+
+All editions follow the same progressive testing approach:
+
+| Level | Tests | Output | Runtime | Use Case |
+|-------|-------|--------|---------|----------|
+| **P1** | 2-4 essential | <20 lines | <5 sec | Default - fast iteration |
+| **P2** | 5-10 + edges | <50 lines | <30 sec | Standard validation |
+| **P3** | 15-25 comprehensive | <100 lines | <2 min | Full coverage |
+
+---
+
+## 🚀 Getting Started
+
+1. **Choose your AI assistant** (see comparison above)
+2. **Read the tool-specific guide:**
+   - Claude → [CLAUDE.md](CLAUDE.md)
+   - Copilot → [COPILOT.md](COPILOT.md)
+   - Cursor → [CURSOR.md](CURSOR.md)
+3. **Follow the quick start** in your chosen guide
+4. **Load documentation progressively** (see [CONTEXT_MANAGEMENT.md](CONTEXT_MANAGEMENT.md))
+
+---
+
+## 🏗️ Project Structure
+
+```
+.
+├── README.md                    # This file - choose your AI
+├── llms.txt                     # Minimal entry point for AI agents
+├── CONTEXT_MANAGEMENT.md        # Token optimization strategy
+├── CLAUDE.md                    # Claude-specific guide
+├── COPILOT.md                   # Copilot-specific guide
+├── CURSOR.md                    # Cursor-specific guide
+│
+├── .claude/                     # Shared agent infrastructure
+│   ├── agents/                  # Agent definitions (all tools use)
+│   ├── env_detect.py           # Environment detection
+│   └── ...
+│
+├── .github/                     # GitHub-specific
+│   └── copilot-instructions.md # Copilot custom instructions
+│
+├── .vscode/                     # VS Code settings
+│   ├── settings.json           # Workspace configuration
+│   └── extensions.json         # Recommended extensions
+│
+├── vhdl/                       # VHDL components
+├── cocotb_tests/               # Test suite
+├── workflow/                   # Requirements & specs
+├── docs/                       # Technical documentation
+└── scripts/                    # Utilities
+```
+
+---
+
+## 🤝 Hybrid Workflows
+
+You can combine tools for optimal results:
+
+### Claude + Copilot
+- Use Claude for requirements and initial generation
+- Use Copilot for iterative refinement
+
+### Cursor + Claude
+- Use Cursor for local development
+- Use Claude Web for long-running cloud tasks
+
+### All Three
+- Requirements with Claude's `/forge-start`
+- Development with Cursor's orchestration
+- Refinement with Copilot's suggestions
+
+---
+
+## 📖 Key Documents
+
+**Start Here:**
+- [llms.txt](llms.txt) - Component catalog (minimal)
+- [CONTEXT_MANAGEMENT.md](CONTEXT_MANAGEMENT.md) - Token optimization
+
+**Tool Guides:**
+- [CLAUDE.md](CLAUDE.md) - Claude workflows
+- [COPILOT.md](COPILOT.md) - Copilot workflows
+- [CURSOR.md](CURSOR.md) - Cursor workflows
+
+**Technical:**
+- [docs/VHDL_CODING_STANDARDS.md](docs/VHDL_CODING_STANDARDS.md) - Style guide
+- [docs/PROGRESSIVE_TESTING_GUIDE.md](docs/PROGRESSIVE_TESTING_GUIDE.md) - Testing patterns
+- [workflow/specs/reference/](workflow/specs/reference/) - Example specifications
+
+---
+
+## 📄 License & Info
+
+**License:** MIT License - See `LICENSE` file
+**Version:** 3.3.0-multi-tenant
+**Template:** https://github.com/vmars-20/forge-vhdl-3v3-vmars
+**Last Updated:** 2025-01-XX
+**Maintainer:** Moku Instrument Forge Team
+
+---
+
+**Choose your tool above and get started! Each path leads to the same destination: tested VHDL components in minutes.**

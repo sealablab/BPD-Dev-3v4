@@ -1,7 +1,10 @@
+# Workspace-mode pyproject.toml for vhdl-forge-3v1
+# Manages multiple Python packages as a unified dependency graph
+
 [project]
-name = "moku-instrument-forge-vhdl"
-version = "1.0.0"
-description = "Shared VHDL utilities for Moku custom instrument development"
+name = "vhdl-forge"
+version = "3.1.0"
+description = "VHDL component library with CocoTB progressive testing and AI-assisted development"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -9,30 +12,65 @@ authors = [
     { name = "Sealab Team" }
 ]
 
+# Workspace-level shared dependencies
+# Available to all Python packages (forge_cocotb, forge_platform, forge_tools)
 dependencies = [
-    "cocotb>=1.8.0",
-    "pytest>=7.0.0",
+    "cocotb>=1.8.0",      # HDL testing framework
+    "pytest>=7.0.0",      # Python unit testing
+    "pyyaml>=6.0.0",      # Configuration parsing
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest-xdist>=3.0.0",  # Parallel test execution
+    "ruff>=0.1.0",          # Python linting
+    "black>=24.0.0",        # Code formatting
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+# ============================================================================
+# UV WORKSPACE CONFIGURATION
+# ============================================================================
 
-[tool.hatch.build.targets.wheel]
-packages = ["forge_cocotb"]
+[tool.uv.workspace]
+# Declare Python packages as workspace members
+# uv manages these as a unified dependency graph
+members = [
+    "python/forge_cocotb",
+    "python/forge_platform",
+    "python/forge_tools",
+]
+
+# ============================================================================
+# NO BUILD SYSTEM - This is a pure workspace container
+# Individual packages have their own [build-system] sections
+# ============================================================================
+
+# ============================================================================
+# TESTING CONFIGURATION
+# ============================================================================
 
 [tool.pytest.ini_options]
 python_files = "test_*.py"
-testpaths = ["tests"]
-norecursedirs = [".venv", "sim_build", "__pycache__", ".git"]
-addopts = "-v"
-
-[tool.uv]
-dev-dependencies = [
-    "pytest-xdist>=3.0.0",
+# Test discovery across workspace
+testpaths = [
+    "cocotb_tests",           # CocoTB HDL tests (main)
+    "python_tests",           # Python unit tests (pytest)
 ]
+norecursedirs = [".venv", "sim_build", "__pycache__", ".git"]
+addopts = "-v --tb=short"
+
+# ============================================================================
+# CODE QUALITY TOOLS
+# ============================================================================
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]

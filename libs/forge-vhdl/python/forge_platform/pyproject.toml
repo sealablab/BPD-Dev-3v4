@@ -1,0 +1,17 @@
+[project]
+name = "forge-platform"
+version = "3.0.0"
+description = "Platform simulation backends for CocoTB (GHDL, oscilloscope, network CR)"
+requires-python = ">=3.10"
+
+dependencies = [
+    "cocotb>=1.8.0",
+    "pyyaml>=6.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["forge_platform"]

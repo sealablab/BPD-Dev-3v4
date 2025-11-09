@@ -404,7 +404,7 @@ signal valid : std_logic;
 ```vhdl
 package safety_pkg is
     -- Voltage limits (16-bit signed, ±5V scale)
-    constant MAX_VOLTAGE_3V0 : signed(15 downto 0) := x"4CCD";  -- 3.0V
+    constant MAX_VOLTAGE_3V1 : signed(15 downto 0) := x"4CCD";  -- 3.0V
     constant MIN_VOLTAGE     : signed(15 downto 0) := x"8000";  -- -5.0V
 
     -- Timing limits
@@ -428,7 +428,7 @@ end package;
 use work.safety_pkg.all;
 
 -- Clamp intensity to safe maximum
-intensity_safe <= clamp_voltage(intensity_raw, MAX_VOLTAGE_3V0);
+intensity_safe <= clamp_voltage(intensity_raw, MAX_VOLTAGE_3V1);
 
 -- Limit counter range
 if counter < MAX_RETRY_COUNT then

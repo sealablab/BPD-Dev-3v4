@@ -1,0 +1,9 @@
+{
+  "hooks": {
+    "SessionStart": {
+      "description": "VHDL-FORGE environment detection and /forge-start announcement",
+      "type": "bash",
+      "command": "uv run python .claude/session_start_hook.py"
+    }
+  }
+}

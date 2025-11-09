@@ -1,0 +1,3 @@
+[submodule "libs/forge-vhdl"]
+	path = libs/forge-vhdl
+	url = git@github.com:sealablab/forge-vhdl-3v4o.git

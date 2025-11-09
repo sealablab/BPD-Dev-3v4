@@ -1,463 +1,385 @@
-# Moku Instrument Forge
+# BPD-Dev-3v4 - Basic Probe Driver Development
 
-> **Build custom FPGA instruments for Moku platforms with safety, clarity, and AI assistance**
+> **Status:** 🚧 **Active WIP** - Current development repo for BPD v3.4 with FORGE architecture
 
-Transform your hardware probes into production-ready Moku instruments using the **FORGE architecture** - a proven pattern for safe, maintainable custom FPGA firmware.
+**What:** Production development of Basic Probe Driver (BPD) custom instrument for Moku platforms using FORGE 3-layer architecture pattern.
 
----
-
-## ✨ What is FORGE?
-
-**FORGE** (Formal Organization for Register-Gated Execution) is an architectural pattern for building custom instruments on Moku platforms. It solves the fundamental challenge of safely coordinating network-settable registers with high-speed FPGA state machines.
-
-### The Problem FORGE Solves
-
-When building custom FPGA instruments, you face a critical challenge:
-- **Network layer** sets control registers asynchronously (user changes settings)
-- **FPGA layer** runs state machines at 125-200 MHz
-- **Chaos ensues** when registers change mid-cycle
-
-**FORGE provides the solution:**
-- ✅ **Safe initialization** - 3-bit handshaking prevents premature starts
-- ✅ **Clean abstraction** - Your FSM uses typed signals, not raw registers
-- ✅ **Synchronization** - Shim layer protects against async updates
-- ✅ **Proven pattern** - Production-tested in Basic Probe Driver (BPD)
+**Why this repo exists:** Unified development environment with intentionally broken-out git submodules for clean dependency management and independent versioning of shared components.
 
 ---
 
-## 🗂️ Obsidian Session Management
+## 🎯 What's Actually Here
 
-**NEW:** Manage development sessions with AI-powered slash commands!
+This is your **working BPD development repo** with all the pieces properly connected:
 
 ```
-/obsd_new_session       # Start fresh session with goals
-/obsd_continue_session  # Resume previous session with full context
-/obsd_close_session     # Archive session + harvest /compact summary
+BPD-Dev-3v4/
+├── examples/basic-probe-driver/     ← BPD production code (THIS IS THE MAIN EVENT)
+│   ├── vhdl/                         ← FORGE 3-layer implementation
+│   │   ├── CustomWrapper_bpd_forge.vhd
+│   │   ├── BPD_forge_shim.vhd       ← Register mapping layer
+│   │   ├── BPD_forge_main.vhd       ← FSM (has known bug, being debugged)
+│   │   └── tests/                    ← CocoTB progressive testing (P1-P3)
+│   └── BPD-RTL.yaml                  ← Register specification
+│
+├── libs/                             ← Git submodules (independently versioned)
+│   ├── forge-vhdl/                   ← VHDL components + serialization packages
+│   ├── moku-models/                  ← Platform specs (Go/Lab/Pro/Delta)
+│   ├── riscure-models/               ← Probe specs (EMFI example)
+│   └── platform/                     ← FORGE templates (NOT a submodule)
+│       ├── MCC_CustomInstrument.vhd  ← Vendor interface (16 CR, 16 SR)
+│       └── FORGE_App_Wrapper.vhd     ← Wrapper template
+│
+├── tools/forge-codegen/              ← YAML→VHDL generator (dormant, manual VHDL phase)
+├── docs/                             ← Reference documentation
+├── .claude/                          ← AI agent definitions + slash commands
+└── Obsidian/Project/                 ← Optional session management workspace
 ```
-
-**Key innovation:** Sessions can automatically harvest the `/compact` context summary, turning your full Claude conversation into structured archive files (commits.md, decisions.md, next-session-plan.md).
-
-**Features:**
-- 📝 **Vault-at-repo-root** - Obsidian wikilinks work naturally with code files
-- 🔄 **Parallel PDA pattern** - Separate navigation for code vs session docs
-- 💾 **Context compaction** - 40-50x compression while preserving critical details
-- 🌿 **Git integration** - Optional session branches, automatic archiving
-
-**See:** `Obsidian/Project/README.md` for complete workflow
 
 ---
 
-## 🚀 Quick Start
+## 🔑 Key Concepts (for 2am debugging)
 
-### Create Your First Instrument
+### FORGE = Safety Pattern for Moku Custom Instruments
 
-```bash
-# 1. Use this template to create your repository on GitHub
-# 2. Clone with submodules
-git clone --recurse-submodules https://github.com/YOUR-USERNAME/your-instrument.git
-cd your-instrument
+**Problem:** Network-settable registers + 125MHz FPGA = chaos when registers change mid-cycle
 
-# 3. Setup environment
-uv sync
-
-# 4. Verify setup
-python -c "from moku_models import MOKU_GO_PLATFORM; print('✅ Ready to FORGE!')"
-
-# 5. Study the reference implementation
-cd examples/basic-probe-driver/
-cat vhdl/FORGE_ARCHITECTURE.md
-```
-
-**Next:** Read `examples/basic-probe-driver/README.md` to see FORGE in action.
-
----
-
-## 🏗️ The FORGE Architecture
-
-### Three Layers, One Goal: Safety
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Layer 1: BRAM Loader (future)                              │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │ Pre-loads register values from BRAM before execution   │ │
-│  └────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Layer 2: Shim (register mapping + synchronization)         │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │ • Unpacks Control Registers → app_reg_* signals       │ │
-│  │ • Respects ready_for_updates from main app            │ │
-│  │ • Type conversions (voltage, time, boolean)           │ │
-│  └────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Layer 3: Main (your application logic)                     │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │ • FSM/application logic                               │ │
-│  │ • Uses app_reg_enable, app_reg_voltage, etc.         │ │
-│  │ • NO knowledge of Control Registers!                  │ │
-│  │ • Signals ready_for_updates when safe                 │ │
-│  └────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Key Innovation: CR0[31:29] Control Scheme
+**Solution:** 3-layer architecture with safe initialization handshaking
 
 ```vhdl
--- Extract FORGE control signals from CR0
+-- CR0[31:29] = FORGE control scheme (THIS IS CRITICAL)
 forge_ready <= Control0(31);  -- Network: "registers loaded"
 user_enable <= Control0(30);  -- User: "enable instrument"
 clk_enable  <= Control0(29);  -- Clock: "clocking enabled"
 
--- 4-condition safe start (all must be high)
 global_enable <= forge_ready AND user_enable AND clk_enable AND loader_done;
 ```
 
-**Why this matters:** Your instrument NEVER starts until all 4 conditions are met. No glitches, no race conditions, no surprises.
+**All 4 conditions must be true** before your instrument runs. No glitches, no race conditions.
+
+### 3 Layers = Clean Separation
+
+```
+Layer 1: BRAM Loader (future)     ← Pre-loads config data
+          ↓
+Layer 2: Shim                     ← CR0-CR15 → app_reg_* signals
+          ↓                          (sync with ready_for_updates)
+Layer 3: Main                     ← Pure FSM logic, zero CR knowledge
+```
+
+**Key insight:** Main app thinks in `app_reg_trigger_voltage`, NOT `Control2[15:0]`. Shim layer handles all the MCC interface ugliness.
 
 ---
 
-## 🧩 Modular Architecture
+## 🚀 Getting Started
 
-### How the Pieces Fit Together
-
-Like Voltron, this monorepo combines independent submodules into a unified development platform. Each submodule is an "island of authority" - independently versioned, yet working in harmony:
-
-```mermaid
-graph LR
-    A[forge-vhdl] -->|VHDL Components| D[Your Instrument]
-    B[moku-models] -->|Platform Specs| D
-    C[riscure-models] -->|Probe Safety| D
-    E[forge-codegen] -->|YAML→VHDL| D
-    D -->|Deploys to| F[Moku Hardware]
-```
-
-### Core Submodules
-
-#### 🔧 **[forge-vhdl](https://github.com/sealablab/forge-vhdl-3v4o)**
-Reusable VHDL components and testing framework
-- Serialization packages (voltage, time, types)
-- Utility components (clock dividers, encoders)
-- CocoTB progressive testing infrastructure
-- *Think of it as:* Your VHDL standard library
-
-#### 📊 **[moku-models](https://github.com/sealablab/moku-models-3v4o)**
-Platform specifications for all Moku devices
-- Hardware capabilities (Go/Lab/Pro/Delta)
-- Signal routing definitions
-- Pydantic models for type-safe configuration
-- *Think of it as:* Your hardware abstraction layer
-
-#### ⚡ **[riscure-models](https://github.com/sealablab/riscure-models-3v4o)**
-Probe specifications and voltage safety validation
-- Electrical characteristics of FI/SCA probes
-- Voltage compatibility checking
-- Example: DS1120A EMFI probe model
-- *Think of it as:* Your probe safety layer
-
-#### 🏗️ **[forge-codegen](https://github.com/sealablab/forge-codegen-3v4o)** *(dormant)*
-YAML to VHDL code generation
-- 23-type serialization system
-- Register mapping generation
-- Currently manual VHDL preferred
-- *Think of it as:* Your future automation layer
-
-### Local Resources
-
-#### 📚 **libs/platform/**
-FORGE foundational entities (not a submodule - core to this repo)
-- `MCC_CustomInstrument.vhd` - Vendor interface
-- `FORGE_App_Wrapper.vhd` - Your starting template
-
-#### 🎓 **examples/basic-probe-driver/**
-Complete production reference implementation
-- Demonstrates all FORGE patterns
-- Includes progressive CocoTB tests
-- Your learning blueprint
-
----
-
-## 🎯 Your First Custom Instrument
-
-### Step 1: Define Your Application Registers (YAML)
-
-```yaml
-# my-instrument.yaml
-app_registers:
-  - name: enable
-    datatype: boolean
-    description: "Master enable for instrument"
-
-  - name: output_voltage
-    datatype: voltage_output_5v0_s16  # Type-safe voltage (0-5V)
-    min_value: 0
-    max_value: 5000  # millivolts
-    description: "Output voltage level"
-
-  - name: pulse_width
-    datatype: time_ns_u32  # Nanosecond timing
-    min_value: 8
-    max_value: 1000000
-    description: "Pulse width in nanoseconds"
-```
-
-### Step 2: Copy and Adapt BPD Structure
+### First Time Setup
 
 ```bash
-# Use BPD as template
-cp -r examples/basic-probe-driver/vhdl my-instrument/
+# Clone with submodules (IMPORTANT: --recurse-submodules!)
+git clone --recurse-submodules https://github.com/YOUR-USERNAME/BPD-Dev-3v4.git
+cd BPD-Dev-3v4
 
-# Study these files in order:
-# 1. CustomWrapper_bpd_forge.vhd - MCC interface integration
-# 2. BPD_forge_shim.vhd - Register unpacking pattern
-# 3. src/basic_probe_driver_custom_inst_main.vhd - FSM implementation
+# Setup Python environment
+uv sync
+
+# Verify everything loaded
+python -c "from moku_models import MOKU_GO_PLATFORM; print('✅ Ready!')"
 ```
 
-### Step 3: Replace BPD Logic with Yours
-
-**Keep the FORGE patterns:**
-- ✅ CR0[31:29] control scheme
-- ✅ app_reg_* abstraction (NO raw Control Registers in main!)
-- ✅ ready_for_updates handshaking
-- ✅ 3-layer architecture
-
-**Replace BPD specifics:**
-- Probe control → Your instrument control
-- FI timing → Your timing requirements
-- Monitor feedback → Your input processing
-- FSM states → Your state machine
-
----
-
-## 🧪 Testing Your Instrument
-
-### Progressive Testing (P1 → P2 → P3)
+### If You Forgot `--recurse-submodules` (we've all been there)
 
 ```bash
-cd your-instrument/vhdl/tests/
+# Initialize all submodules
+git submodule update --init --recursive
 
-# P1: LLM-optimized tests (<20 lines each, fast feedback)
+# Verify they're actually there
+ls libs/forge-vhdl/vhdl/packages/  # Should show forge_*.vhd files
+```
+
+### Running BPD Tests
+
+```bash
+cd examples/basic-probe-driver/vhdl/tests/
+
+# P1 - Fast iteration (LLM-optimized, <20 lines per test)
 uv run python run.py
 
-# P2: Comprehensive validation (detailed scenarios)
+# P2 - Comprehensive (all features)
 TEST_LEVEL=P2_INTERMEDIATE uv run python run.py
 
-# P3: Full coverage (every edge case)
+# P3 - Full coverage (stress testing)
 TEST_LEVEL=P3_COMPREHENSIVE uv run python run.py
 ```
 
-**See:** `examples/basic-probe-driver/vhdl/tests/README.md` for testing guide.
-
 ---
 
-## 🎓 Learning Path
+## 📚 Documentation (Progressive Depth)
 
-### New to FORGE?
+### When You Need Quick Answers
 
-1. **Start:** Read this README (you're here!)
-2. **Understand:** `examples/basic-probe-driver/README.md` - What BPD demonstrates
-3. **Deep dive:** `examples/basic-probe-driver/vhdl/FORGE_ARCHITECTURE.md` - Complete spec
-4. **Implement:** Copy BPD structure, replace logic, test
+**Start here:** `llms.txt` files (500-1000 tokens, essential facts)
 
-### Need Architecture Details?
+```bash
+cat llms.txt                           # This repo overview
+cat libs/forge-vhdl/llms.txt           # VHDL components
+cat libs/moku-models/llms.txt          # Platform specs
+cat tools/forge-codegen/llms.txt       # Code generator (dormant)
+```
 
-- **Complete spec:** [CLAUDE.md](CLAUDE.md) - Full architecture, MCC interface, integration
-- **Quick ref:** [llms.txt](llms.txt) - Component catalog for AI navigation
-- **Customization:** Run `/customize-monorepo` in Claude Code
+### When You Need Design Details
 
-### Ready to Build?
+**Next level:** `CLAUDE.md` files (3-5k tokens, complete architecture)
 
-1. Study `libs/platform/FORGE_App_Wrapper.vhd` - Your starting template
-2. Reference `libs/platform/MCC_CustomInstrument.vhd` - MCC interface entity
-3. Follow BPD patterns exactly (proven in production!)
+```bash
+cat CLAUDE.md                          # Full repo architecture
+cat libs/forge-vhdl/CLAUDE.md          # VHDL design patterns
+cat libs/moku-models/CLAUDE.md         # Platform integration
+```
 
----
+### When You Need Implementation Specifics
 
-## 🏛️ Foundational Entities
+**Deep dive:** Source code + specialized docs
 
-**Located in `libs/platform/` - DO NOT MODIFY THESE:**
+```bash
+# BPD complete architecture spec
+cat examples/basic-probe-driver/vhdl/FORGE_ARCHITECTURE.md
 
-| Entity | Purpose | Status |
-|--------|---------|--------|
-| **MCC_CustomInstrument** | Simplified MCC interface (16 CR, 16 SR) | Authoritative |
-| **FORGE_App_Wrapper** | 3-layer wrapper template | Customize for your app |
+# Testing guide
+cat examples/basic-probe-driver/vhdl/tests/README.md
 
-**Key Documentation:**
-```vhdl
--- CR0[31:29] is RESERVED for FORGE control scheme
--- CR0[28:0] + CR1-CR15 available for your application
-forge_ready <= Control0(31);  -- Network ready
-user_enable <= Control0(30);  -- User enabled
-clk_enable  <= Control0(29);  -- Clock enabled
+# MCC interface details
+cat libs/platform/MCC_CustomInstrument.vhd
 ```
 
 ---
 
-## 🌍 Ecosystem
+## 🧩 Git Submodules Explained (the confusing bits)
 
-### Platform Support
+### What Are Submodules?
 
-- **Moku:Go** - 125 MHz, compact form factor
-- **Moku:Lab** - 200 MHz, benchtop instrument
-- **Moku:Pro** - 200 MHz, rackmount system
-- **Moku:Delta** - (future support)
+**Think of them as:** Git repos pinned to specific commits inside your parent repo.
 
-### Probe Integration
+**Why use them here:**
+- `libs/forge-vhdl` - Shared VHDL components (reused across instruments)
+- `libs/moku-models` - Platform specs (independent versioning)
+- `libs/riscure-models` - Probe specs (optional, example reference)
+- `tools/forge-codegen` - Code generator (dormant, may reactivate)
 
-This template includes **Riscure EMFI probe models** as reference:
-- Voltage safety validation
-- Port specifications
-- Documentation patterns
+**Key insight:** Each submodule is **independently versioned**. Update one without touching others.
 
-**Add your probes:** Use `libs/riscure-models/` as template, create `libs/YOUR-probe-models/`
+### Common Submodule Operations
 
-### Type System
+```bash
+# Pull latest changes in all submodules
+git submodule update --remote
 
-**23 serialization types** for YAML → VHDL:
-- Voltage types: 0-3.3V, 0-5V, ±0.5V, ±20V, ±25V
-- Time types: nanoseconds, microseconds, milliseconds
-- Boolean, integers (signed/unsigned), enumerated types
+# Make changes inside a submodule
+cd libs/forge-vhdl
+git checkout -b my-feature
+# ... make changes ...
+git add . && git commit -m "feat: add new component"
+git push origin my-feature
 
-**See:** `tools/forge-codegen/llms.txt` for complete type catalog
-
----
-
-## 🧩 Directory Structure
-
+# Update parent repo to point to new submodule commit
+cd ../..  # Back to BPD-Dev-3v4 root
+git add libs/forge-vhdl
+git commit -m "chore: update forge-vhdl submodule"
 ```
-your-moku-instrument/
-├── libs/
-│   ├── platform/              # FORGE foundational entities
-│   │   ├── MCC_CustomInstrument.vhd    # MCC interface (DO NOT MODIFY)
-│   │   └── FORGE_App_Wrapper.vhd       # 3-layer template (CUSTOMIZE)
-│   ├── moku-models/           # Submodule: Platform specifications
-│   ├── riscure-models/        # Submodule: Example probe specs
-│   └── forge-vhdl/            # Submodule: VHDL utilities
-│
-├── tools/
-│   └── forge-codegen/         # Submodule: YAML → VHDL generator
-│
-├── examples/
-│   └── basic-probe-driver/    # Complete FORGE reference
-│       ├── README.md          # Usage guide
-│       ├── BPD-RTL.yaml       # Register specification
-│       └── vhdl/              # VHDL implementation
-│           ├── FORGE_ARCHITECTURE.md   # Architecture spec
-│           ├── CustomWrapper_bpd_forge.vhd
-│           ├── BPD_forge_shim.vhd
-│           ├── BPD_forge_main.vhd
-│           └── tests/         # CocoTB progressive tests
-│
-├── docs/
-│   └── vendor-reference/      # MCC upstream tracking
-│
-├── .claude/
-│   ├── agents/                # AI agents (cocotb-integration-test tested)
-│   └── commands/              # Slash commands
-│
-├── CLAUDE.md                  # Complete architecture guide
-├── llms.txt                   # AI navigation quick ref
-└── README.md                  # This file
+
+### Submodule Troubleshooting
+
+**Problem:** `libs/forge-vhdl/` is empty or has wrong commit
+
+```bash
+# Re-initialize submodules
+git submodule update --init --recursive
+```
+
+**Problem:** Made changes inside submodule but parent repo doesn't see them
+
+```bash
+# Submodule changes must be committed INSIDE the submodule first
+cd libs/forge-vhdl
+git status  # Should be clean
+cd ../..
+git add libs/forge-vhdl  # Now update parent pointer
 ```
 
 ---
 
-## 📚 Documentation Philosophy
+## 🔬 Current Development Status
 
-### 3-Tier Progressive Disclosure
+### What's Working
 
-**Optimized for both humans AND AI agents:**
+- ✅ FORGE 3-layer architecture fully specified
+- ✅ BPD-RTL.yaml register specification complete
+- ✅ VHDL serialization packages (voltage, time, types)
+- ✅ CocoTB progressive testing infrastructure (P1-P3)
+- ✅ Hierarchical encoder for oscilloscope debugging (14-bit state+status)
+- ✅ MCC CustomInstrument interface (16 CR, 16 SR)
 
-| Tier | What | When | Token Cost |
-|------|------|------|------------|
-| **Tier 1** | `llms.txt` files | Always load first | ~500-1000 |
-| **Tier 2** | `CLAUDE.md` files | When designing/integrating | ~3000-5000 |
-| **Tier 3** | Source code + tests | When implementing | Variable |
+### What's In Progress
 
-**Why this matters:**
-- AI agents load minimal context first
-- Expand to detailed docs only when needed
-- Source code accessed selectively
-- Fast, efficient context management
+- 🚧 **BPD FSM debugging** (known bug, actively working on it)
+- 🚧 Type system refinements (std_logic_reg, ±5V voltage types added, YAML needs update)
+- 🚧 BRAM loader integration (Layer 1 - design complete, implementation pending)
 
----
+### What's Next
 
-## 🤝 Contributing
-
-This is a **template repository** - make it yours!
-
-### Using This Template
-
-1. Click **"Use this template"** on GitHub
-2. Clone with submodules: `git clone --recurse-submodules ...`
-3. Customize for your probes/instruments
-4. Build amazing things!
-
-### Sharing Back
-
-If you create generally useful patterns:
-- Document them for others
-- Consider contributing enhancements
-- Share custom probe models (if not proprietary)
-
-### Submodule Development
-
-1. Make changes in appropriate submodule repository
-2. Write CocoTB tests for VHDL changes
-3. Validate with `pytest`
-4. Update submodule reference in parent repo
+1. Complete BPD FSM debugging
+2. Update BPD-RTL.yaml with correct types (std_logic_reg, voltage_*_5v_bipolar_s16)
+3. Regenerate or manually update shim layer
+4. Full integration testing on Moku hardware
+5. Production validation
 
 ---
 
-## ⚡ Why FORGE?
+## 🎓 Learning Path (for new contributors or future-you)
 
-### Before FORGE
-```vhdl
--- Main app directly reads Control Registers
-if Control1(0) = '1' then  -- What does bit 0 mean? 🤔
-    voltage_out <= Control2;  -- Raw bits, no type safety! 😱
-    -- Hope nothing changes mid-cycle! 🤞
-end if;
+### 1. Understand the Problem
+
+Read: `docs/GITHUB_TEMPLATE_SETUP.md` - Why FORGE exists, what it solves
+
+### 2. See It In Action
+
+Study: `examples/basic-probe-driver/` - Complete reference implementation
+- Start: `examples/basic-probe-driver/README.md`
+- Deep dive: `examples/basic-probe-driver/vhdl/FORGE_ARCHITECTURE.md`
+
+### 3. Understand the Pieces
+
+Explore submodules:
+- `libs/forge-vhdl/` - Reusable VHDL components
+- `libs/moku-models/` - Platform specifications
+- `libs/platform/` - FORGE templates (MCC interface)
+
+### 4. Build Your Own
+
+Copy BPD structure, replace logic:
+- Keep: FORGE patterns (CR0[31:29], app_reg_* abstraction, ready_for_updates)
+- Replace: BPD-specific FSM with your instrument logic
+
+---
+
+## 🗂️ Optional: Obsidian Session Management
+
+**TL;DR:** Obsidian workspace for managing dev sessions with Claude, including context compaction and automatic archiving.
+
+**Slash commands:**
+```bash
+/obsd_new_session       # Start fresh session
+/obsd_continue_session  # Resume previous session
+/obsd_close_session     # Archive + harvest /compact summary
 ```
 
-### After FORGE
-```vhdl
--- Main app uses typed, meaningful signals
-if app_reg_enable = '1' then  -- Clear intent ✅
-    voltage_out <= app_reg_output_voltage;  -- Type-safe voltage ✅
-    -- ready_for_updates handshaking prevents async issues ✅
-end if;
-```
+**Full details:** See `docs/OBSIDIAN_INTEGRATION.md` or `Obsidian/Project/README.md`
 
-**Result:**
-- Safer code (protected from async changes)
-- Clearer intent (typed signals with meaningful names)
-- Easier maintenance (main app doesn't know about registers)
-- Production-proven (BPD validates the pattern)
+**Not using Obsidian?** That's fine! All core workflows work without it.
 
 ---
 
-## 📖 Version History
+## 🛠️ Common Development Tasks
 
-**v2.0.0** (2025-11-06) - Template Release
-- FORGE 3-layer architecture established
-- MCC CustomInstrument interface (16 CR, 16 SR)
-- Complete BPD reference implementation
-- 3-tier documentation system
-- Comprehensive .gitignore
-- Template-ready structure
+### Running BPD on Moku Hardware
 
+```bash
+# Deploy + operate BPD
+# See: Obsidian/Project/BPD-Two-Tool-Architecture.md for complete workflow
 
-## 📞 Get Help
+# Tool 1: moku-go.py (deployment + control)
+python scripts/moku-go.py --deploy   # Deploy to Moku:Go
 
-- **Documentation:** Start with `examples/basic-probe-driver/README.md`
-- **Architecture:** See `CLAUDE.md` for complete details
-- **Session Management:** See `Obsidian/Project/Sessions/README.md` for workflow
-- **AI Assistance:** Run `/customize-monorepo` or `/obsd_new_session` in Claude Code
-- **Issues:** Open issues in your repository (this is a template!)
+# Tool 2: bpd-debug.py (monitoring + debugging)
+python scripts/bpd-debug.py --monitor  # Watch oscilloscope state encoding
+```
+
+### Updating Submodule to Latest
+
+```bash
+# Update specific submodule
+cd libs/forge-vhdl
+git pull origin main
+cd ../..
+git add libs/forge-vhdl
+git commit -m "chore: update forge-vhdl to latest"
+```
+
+### Adding New VHDL Component to forge-vhdl
+
+```bash
+# Work inside submodule
+cd libs/forge-vhdl
+git checkout -b feat/my-new-component
+
+# Add component
+# ... create vhdl/components/my_component.vhd ...
+
+# Test it
+cd tests/
+uv run python run.py
+
+# Commit in submodule
+git add vhdl/components/my_component.vhd
+git commit -m "feat: add my_component"
+git push origin feat/my-new-component
+
+# Update parent repo
+cd ../..
+git add libs/forge-vhdl
+git commit -m "feat: integrate new forge-vhdl component"
+```
+
+---
+
+## 📞 Getting Help
+
+### Documentation Hierarchy
+
+1. **Quick question?** → Read relevant `llms.txt`
+2. **Design question?** → Read relevant `CLAUDE.md`
+3. **Implementation question?** → Read source code + specialized docs
+4. **Still stuck?** → Check `Obsidian/Project/Handoffs/` for recent context
+
+### Key Architecture Files
+
+- `CLAUDE.md` - Complete monorepo architecture (THIS FILE = gold standard)
+- `examples/basic-probe-driver/vhdl/FORGE_ARCHITECTURE.md` - FORGE pattern spec
+- `libs/platform/MCC_CustomInstrument.vhd` - Vendor interface entity
+- `Obsidian/Project/BPD-Two-Tool-Architecture.md` - Deployment architecture
+
+### AI Assistance
+
+```bash
+# Claude Code slash commands
+/customize-monorepo      # Adapt this template for new instruments
+/obsd_new_session        # Start managed development session
+```
+
+---
+
+## 📋 Checklists (for context switching)
+
+### Starting Development Session
+
+- [ ] `git status` - Clean working tree?
+- [ ] `git submodule status` - All submodules at expected commits?
+- [ ] `uv sync` - Python environment up to date?
+- [ ] Read `Obsidian/Project/Sessions/YYYY-MM-DD/next-session-plan.md` (if exists)
+
+### Before Committing
+
+- [ ] Tests pass? (`cd examples/basic-probe-driver/vhdl/tests/ && uv run python run.py`)
+- [ ] VHDL compiles? (GHDL or vendor tools)
+- [ ] Submodule changes committed first? (if working in submodule)
+- [ ] Commit message follows convention? (`feat:`, `fix:`, `docs:`, `chore:`)
+
+### Before Pushing
+
+- [ ] Working tree clean? (`git status`)
+- [ ] Submodule pointers updated? (`git submodule status`)
+- [ ] Documentation updated? (if adding features)
+- [ ] Tests still pass? (paranoid final check)
 
 ---
 
@@ -467,21 +389,32 @@ MIT License - See [LICENSE](LICENSE)
 
 ---
 
-## 🎉 Ready to Build?
+## 🎉 Quick Mental Model
 
-```bash
-# Clone this template
-git clone --recurse-submodules https://github.com/YOUR-USERNAME/your-instrument.git
+**Think of this repo as:**
 
-# Setup environment
-cd your-instrument
-uv sync
-
-# Study the reference
-cd examples/basic-probe-driver/
-cat README.md
-
-# Start building!
+```
+BPD-Dev-3v4
+├── YOUR WORK HERE        ← examples/basic-probe-driver/
+├── Shared libraries      ← libs/* (git submodules)
+├── Code generator        ← tools/forge-codegen/ (dormant)
+├── Documentation         ← docs/, CLAUDE.md, llms.txt
+└── Optional session mgmt ← Obsidian/Project/
 ```
 
-**Welcome to the FORGE ecosystem. Let's build something amazing! 🚀**
+**When in doubt:**
+1. Check `git submodule status` (are submodules loaded?)
+2. Read `CLAUDE.md` (what's the architecture?)
+3. Study BPD reference (how does it work?)
+4. Run tests (does it still work?)
+
+**Most common mistake:** Forgetting `--recurse-submodules` when cloning. If `libs/forge-vhdl/` is empty, run `git submodule update --init --recursive`.
+
+---
+
+**Version:** 3.4-WIP
+**Last Updated:** 2025-11-09
+**Primary Developer:** johnycsh
+**Status:** Active development, BPD FSM debugging phase
+
+**Remember:** When you're sleep-deprived and can't remember how submodules work, just read this file. That's why it exists. ☕
